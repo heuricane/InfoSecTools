@@ -1,4 +1,5 @@
-﻿#region CKL functions
+﻿# Sourced from from ZINCARLA
+ #region CKL functions
 <#
 .SYNOPSIS
     Gets a stig info attribute
