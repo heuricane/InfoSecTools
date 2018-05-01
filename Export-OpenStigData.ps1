@@ -1,4 +1,5 @@
-﻿<#
+﻿# Sourced from ZINCARLA
+ <#
 .SYNOPSIS
     Saves a CSV containing information on all Open stigs
 .DESCRIPTION
