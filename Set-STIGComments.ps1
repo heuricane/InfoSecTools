@@ -1,4 +1,6 @@
-﻿$user = "Jay Berkovitz WSMIS ISSO"
+﻿# Sourced from msmithworkaccount's AutoFill
+ 
+ $user = "Jay Berkovitz WSMIS ISSO"
 $initpath = "c:\dwn\"
 
 # This function creates the dialog box to choose the checklist file
