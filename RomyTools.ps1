@@ -1,7 +1,7 @@
 ﻿#
 # Might be easier to contol services than one thinks
 #
-$target="UWDMEBABINGO"
+$target="ZOLTAN"
 $svc = "Spooler"
 Get-Service -ComputerName $target -Name $svc | Stop-Service
 #
@@ -10,7 +10,7 @@ Get-Service -ComputerName $target -Name $svc | Start-Service
 #
 # What happens when you try this?
 #
-$user = "Jay.Berkovitz.CTR@me.navy.mil"
+$user = "Jay.Berko.CTR@snail.mil"
 $dc = $env:LOGONSERVER
 Disable-Mailbox -Identity $user -DomainController $dc -Confirm
 #
