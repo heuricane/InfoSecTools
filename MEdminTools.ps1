@@ -1,4 +1,5 @@
-﻿#
+#
+#
 # Might be easier to contol services than one thinks
 #
 $target="ZOLTAN"
@@ -31,12 +32,10 @@ Invoke-Command -Session $sesh {
 #
 #
 # Combining data
-# First of all, long commands suck, here's a trick to shorten
 #
 $WSName = Get-ADUser -Identity $GroupMember -Properties * | Select-Object extensionAttribute10
 $WSName = $WSName | Select-Object -ExpandProperty extensionAttribute1 -First 1
 Write-Output $WSName
-
 
 
 # Now, I don't see where you set $SamName, I assume it's not one at a time.
@@ -45,7 +44,6 @@ Write-Output $WSName
 $date = Get-Date -format d
 $savedate = (Get-Date).tostring("yyyyMMdd")
 $path = 'C:\EMS\' + $savedate + '.csv'
-
 $CustomList = @()
 
 Foreach ($SamName in $SamList){
@@ -53,7 +51,6 @@ Foreach ($SamName in $SamList){
     $mbx = Get-Mailbox -Identity $SamName
     $mbx = $mbx | Select -Pr Name,UseDatabaseQuotaDefaults,IssueWarningQuota,ProhibitSendQuota,ProhibitSendReceiveQuota,ServerName,Database 
     $mbx = $mbx | Sort-Object Name,ServerName
-
     $cbx = Get-CASMailbox -Identity $SamName 
     $cbx = $cbx | Select-Object -Property OWAEnabled, PopEnabled,ImapEnabled,ActiveSyncEnabled 
     $cbx = $cbx | Sort-Object Name,ServerName
@@ -63,17 +60,14 @@ Foreach ($SamName in $SamList){
         'DBdefault' = $mbx.UseDatabaseQuotaDefaults;
         'IssueWarn' = $mbx.IssueWarningQuota;
         'ProhibitS' = $mbx.ProhibitSendQuota;
-        'ProhibitR' = $mbx.ProhibitSendReceiveQuota
-        'ServerNam' = $mbx.ServerName
-        'Databasex' = $mbx.Database
-        'OWAEnable' = $cbx.OWAEnabled
-        'PopEnable' = $cbx.PopEnabled
-        'ImpEnable' = $cbx.IMAPEnabled
-        'ActEnable' = $cbx.ActiveSyncEnabled
+        'ProhibitR' = $mbx.ProhibitSendReceiveQuota;
+        'ServerNam' = $mbx.ServerName;
+        'Databasex' = $mbx.Database;
+        'OWAEnable' = $cbx.OWAEnabled;
+        'PopEnable' = $cbx.PopEnabled;
+        'ImpEnable' = $cbx.IMAPEnabled;
+        'ActEnable' = $cbx.ActiveSyncEnabled;
         })
-
     $CustomList += $CustomObject
-
 }
-
 $CustomList | Export-Csv -Path $path -NoTypeInformation
