@@ -56,7 +56,7 @@ Foreach ($SamName in $SamList){
     $cbx = $cbx | Sort-Object Name,ServerName
 
     $CustomObject = New-Object -TypeName PSObject -Property (@{
-        'UsersName' = $mbx.Name
+        'UsersName' = $mbx.Name;
         'DBdefault' = $mbx.UseDatabaseQuotaDefaults;
         'IssueWarn' = $mbx.IssueWarningQuota;
         'ProhibitS' = $mbx.ProhibitSendQuota;
