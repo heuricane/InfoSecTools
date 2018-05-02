@@ -46,7 +46,7 @@ $date = Get-Date -format d
 $savedate = (Get-Date).tostring("yyyyMMdd")
 $path = 'C:\EMS\' + $savedate + '.csv'
 
-$RomysCustomList = @()
+$CustomList = @()
 
 Foreach ($SamName in $SamList){
 
@@ -58,7 +58,7 @@ Foreach ($SamName in $SamList){
     $cbx = $cbx | Select-Object -Property OWAEnabled, PopEnabled,ImapEnabled,ActiveSyncEnabled 
     $cbx = $cbx | Sort-Object Name,ServerName
 
-    $RomysCustomObject = New-Object -TypeName PSObject -Property (@{
+    $CustomObject = New-Object -TypeName PSObject -Property (@{
         'UsersName' = $mbx.Name
         'DBdefault' = $mbx.UseDatabaseQuotaDefaults;
         'IssueWarn' = $mbx.IssueWarningQuota;
@@ -72,8 +72,8 @@ Foreach ($SamName in $SamList){
         'ActEnable' = $cbx.ActiveSyncEnabled
         })
 
-    $RomysCustomList += $RomysCustomObject
+    $CustomList += $RomysCustomObject
 
 }
 
-$RomysCustomList | Export-Csv -Path $path -NoTypeInformation
+$CustomList | Export-Csv -Path $path -NoTypeInformation
