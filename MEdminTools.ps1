@@ -24,7 +24,7 @@ Connect-Mailbox -Identity $user -DomainController $dc -Confirm
 $svc = "Netman"
 $timer = 600 #10 minutes
 $sesh = New-PSSession -ComputerName $target
-Invoke-Command -Session $sesh {
+Invoke-Command -Session $sesh -ScriptBlock {
     Get-Service -ComputerName $target -Name $svc | Stop-Service
     Start-Sleep -Seconds $timer
     Get-Service -ComputerName $target -Name $svc | Start-Service
