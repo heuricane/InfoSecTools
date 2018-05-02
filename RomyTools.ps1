@@ -48,8 +48,6 @@ $path = 'C:\EMS\' + $savedate + '.csv'
 
 $RomysCustomList = @()
 
-
-
 Foreach ($SamName in $SamList){
 
     $mbx = Get-Mailbox -Identity $SamName
@@ -59,7 +57,6 @@ Foreach ($SamName in $SamList){
     $cbx = Get-CASMailbox -Identity $SamName 
     $cbx = $cbx | Select-Object -Property OWAEnabled, PopEnabled,ImapEnabled,ActiveSyncEnabled 
     $cbx = $cbx | Sort-Object Name,ServerName
-
 
     $RomysCustomObject = New-Object -TypeName PSObject -Property (@{
         'UsersName' = $mbx.Name
