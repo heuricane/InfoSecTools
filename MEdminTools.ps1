@@ -72,7 +72,7 @@ Foreach ($SamName in $SamList){
         'ActEnable' = $cbx.ActiveSyncEnabled
         })
 
-    $CustomList += $RomysCustomObject
+    $CustomList += $CustomObject
 
 }
 
