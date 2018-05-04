@@ -1,12 +1,9 @@
-$save = (Get-Date).tostring("yyyyMMddhhmmss")
-
+# Target the file
 $filePath = "C:\tmp\WSMIS_REALM_SSP_0312018_5.5 DRAFT updates.docx"
-$textPath = "C:\tmp\strings.txt"
-$outputPath = "C:\tmp\list-" +$save+ ".csv"
-$findTexts = "("
-$doc = Get-ChildItem -path $filePath #-Recurse -Include *.docx 
-$application = New-Object -comobject word.application 
+$doc = Get-ChildItem -path $filePath
 
+# Open the File
+$application = New-Object -comobject word.application 
 $document = $application.documents.open("$doc", $false, $true)
 $application.visible = $False
 $matchCase = $false 
@@ -18,31 +15,30 @@ $forward = $true
 $wrap = 1
 $range = $document.content
 $null = $range.movestart()
-
-
 $string = $document.Content.Text
-# $regex = '\(([^\)]+)\)'
-# [regex]::match($string,$regex).Groups[2].Value
 
+
+# Search for words in Parenthesis
 $list = @()
-
 1..5000 | Foreach {
     '(' + $String.Split('()')[$_] + ')'
     $list += $String.Split('()')[$_]
 }
 
+# Remove blank entries and sentences in Parenthesis
 $output = @()
 Foreach ($line in $list){
     If ($line -ne ""){
-        If($line.length -lt 10){
+        If($line.length -lt 20){
             $output += $line
         }
     }
 
 }
-
-$output | Export-CSV -NoTypeInformation -Path $outputPath
+ # Saves the Output
+$save = (Get-Date).tostring("yyyyMMddhhmmss")
+$outputPath = "C:\tmp\list-" +$save+ ".csv"
+$output > $outputPath
 
 #$document.close()
-
 #$application.quit()
