@@ -17,10 +17,13 @@ $range = $document.content
 $null = $range.movestart()
 $string = $document.Content.Text
 
+# Word Count
 
-# Search for words in Parenthesis
+# Search for all words for words in Parenthesis
 $list = @()
-1..5000 | Foreach {
+$count = ($string | measure-object -word).Words
+
+1..$count | Foreach {
     '(' + $String.Split('()')[$_] + ')'
     $list += $String.Split('()')[$_]
 }
