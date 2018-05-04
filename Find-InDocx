@@ -1,5 +1,5 @@
 # Target the file
-$filePath = "C:\tmp\WSMIS_REALM_SSP_0312018_5.5 DRAFT updates.docx"
+$filePath = "C:\tmp\file.docx"
 $doc = Get-ChildItem -path $filePath
 
 # Open the File
