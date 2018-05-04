@@ -41,7 +41,7 @@ Foreach ($line in $list){
  # Saves the Output
 $save = (Get-Date).tostring("yyyyMMddhhmmss")
 $outputPath = "C:\tmp\list-" +$save+ ".csv"
-$output > $outputPath
+$output | Sort -Unique > $outputPath
 
 #$document.close()
 #$application.quit()
