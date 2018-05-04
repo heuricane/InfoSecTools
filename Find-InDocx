@@ -2,7 +2,7 @@ $save = (Get-Date).tostring("yyyyMMddhhmmss")
 
 $filePath = "C:\tmp\WSMIS_REALM_SSP_0312018_5.5 DRAFT updates.docx"
 $textPath = "C:\tmp\strings.txt"
-$outputPath = "C:\tmp\" +$save+ ".txt"
+$outputPath = "C:\tmp\list-" +$save+ ".csv"
 $findTexts = "("
 $doc = Get-ChildItem -path $filePath #-Recurse -Include *.docx 
 $application = New-Object -comobject word.application 
@@ -21,12 +21,27 @@ $null = $range.movestart()
 
 
 $string = $document.Content.Text
-$regex = '\(([^\)]+)\)'
+# $regex = '\(([^\)]+)\)'
+# [regex]::match($string,$regex).Groups[2].Value
 
+$list = @()
 
-[regex]::match($string,$regex).Groups[2].Value
+1..5000 | Foreach {
+    '(' + $String.Split('()')[$_] + ')'
+    $list += $String.Split('()')[$_]
+}
 
+$output = @()
+Foreach ($line in $list){
+    If ($line -ne ""){
+        If($line.length -lt 10){
+            $output += $line
+        }
+    }
 
+}
+
+$output | Export-CSV -NoTypeInformation -Path $outputPath
 
 #$document.close()
 
