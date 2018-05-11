@@ -1,8 +1,12 @@
 # Have to pull the STIGs on the short list from the long list
 
+# Put the two lists in C:\tmp
 Set-Location C:\tmp
 
+# Import the two lists to $vars
 $short = Import-CSV -Path shortlist.csv
 $long = Import-CSV -Path longlist.csv
+
+# Compare and output
 $list = $long | Where-Object {$short.STIG_ID -contains $_.STIG_ID}
 $list | Export-CSV -path list.csv -NoTypeInformation
