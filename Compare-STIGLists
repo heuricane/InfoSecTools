@@ -1,0 +1,8 @@
+# Have to pull the STIGs on the short list from the long list
+
+Set-Location C:\tmp
+
+$short = Import-CSV -Path shortlist.csv
+$long = Import-CSV -Path longlist.csv
+$list = $long | Where-Object {$short.STIG_ID -contains $_.STIG_ID}
+$list | Export-CSV -path list.csv
