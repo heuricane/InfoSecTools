@@ -1,73 +1,71 @@
-#
-#
-# Might be easier to contol services than one thinks
-#
-$target="ZOLTAN"
-$svc = "Spooler"
-Get-Service -ComputerName $target -Name $svc | Stop-Service
-#
-Get-Service -ComputerName $target -Name $svc | Start-Service
-#
-#
-# What happens when you try this?
-#
-$user = "Jay.Berko.CTR@snail.mil"
-$dc = $env:LOGONSERVER
-Disable-Mailbox -Identity $user -DomainController $dc -Confirm
-#
-Connect-Mailbox -Identity $user -DomainController $dc -Confirm
-#
-#
-#Temporarily disable internet access tough to turn back on so we'll invoke the command with a timer
-#If you don't like the timer, talk to networking for enabling/disabling port.
-#
-$svc = "Netman"
-$timer = 600 #10 minutes
-$sesh = New-PSSession -ComputerName $target
-Invoke-Command -Session $sesh -ScriptBlock {
-    Get-Service -ComputerName $target -Name $svc | Stop-Service
-    Start-Sleep -Seconds $timer
-    Get-Service -ComputerName $target -Name $svc | Start-Service
-    }
-#
-#
-# Combining data
-#
-$WSName = Get-ADUser -Identity $GroupMember -Properties * | Select-Object extensionAttribute10
-$WSName = $WSName | Select-Object -ExpandProperty extensionAttribute1 -First 1
-Write-Output $WSName
+#Import the Modules we needs#
+Import-Module activedirectory
+Add-PSSnapin Microsoft.Exchange.Management.PowerShell.Admin -ErrorAction SilentlyContinue
 
-
-# Now, I don't see where you set $SamName, I assume it's not one at a time.
-# This example assumes $SamName is a list we loop through
-
-$date = Get-Date -format d
-$savedate = (Get-Date).tostring("yyyyMMdd")
-$path = 'C:\EMS\' + $savedate + '.csv'
+$GroupMembers = Get-ADGroupMember -Identity 'TEST GROUP'
+$SaveDate = [string](Get-Date -Format yyyyMMdd_HHmm)
+$Path = 'C:\EMS\Project_X_' + $SaveDate + '.csv'
 $CustomList = @()
 
-Foreach ($SamName in $SamList){
 
-    $mbx = Get-Mailbox -Identity $SamName
-    $mbx = $mbx | Select -Pr Name,UseDatabaseQuotaDefaults,IssueWarningQuota,ProhibitSendQuota,ProhibitSendReceiveQuota,ServerName,Database 
-    $mbx = $mbx | Sort-Object Name,ServerName
-    $cbx = Get-CASMailbox -Identity $SamName 
-    $cbx = $cbx | Select-Object -Property OWAEnabled, PopEnabled,ImapEnabled,ActiveSyncEnabled 
-    $cbx = $cbx | Sort-Object Name,ServerName
+ForEach ($GroupMember in $GroupMembers){
+
+    $WSName = Get-ADUser -Identity $GroupMember -Pr * | Select-Object -ExpandProperty extensionAttribute10 -First 1
+    Write-Output $WSName
+#    Method1    Stop Printer Services - Working
+    Invoke-Expression "psservice64.exe -nobanner \\$WSName stop spooler"
+    Invoke-Expression "psservice64.exe -nobanner \\$WSName setconfig spooler disabled"
+
+
+    #Set the user's Mailbox to 0 Send/Receive
+    $SamName = Get-ADUser -Identity $GroupMember -Pr * | Select-Object -ExpandProperty CN -First 1
+    Write-Output $SamName
+
+    #Get the Information about the user
+    $MagicMailbox = ForEach ($User in $SamName) {
+    $MBX = Get-Mailbox -Identity $User
+    $MBX = $MBX | Select-Object -Property Name,UseDatabaseQuotaDefaults,IssueWarningQuota,ProhibitSendQuota,ProhibitSendReceiveQuota,ServerName,Database
+    $CBX = Get-CASMailbox -Identity $User
+    $CBX = $CBX | Select-Object -Property Name,OWAEnabled, PopEnabled,ImapEnabled,ActiveSyncEnabled
 
     $CustomObject = New-Object -TypeName PSObject -Property (@{
-        'UsersName' = $mbx.Name;
-        'DBdefault' = $mbx.UseDatabaseQuotaDefaults;
-        'IssueWarn' = $mbx.IssueWarningQuota;
-        'ProhibitS' = $mbx.ProhibitSendQuota;
-        'ProhibitR' = $mbx.ProhibitSendReceiveQuota;
-        'ServerNam' = $mbx.ServerName;
-        'Databasex' = $mbx.Database;
-        'OWAEnable' = $cbx.OWAEnabled;
-        'PopEnable' = $cbx.PopEnabled;
-        'ImpEnable' = $cbx.IMAPEnabled;
-        'ActEnable' = $cbx.ActiveSyncEnabled;
+        'UsersName' = $MBX.Name;
+        'DBdefault' = $MBX.UseDatabaseQuotaDefaults;
+        'IssueWarn' = $MBX.IssueWarningQuota;
+        'ProhibitS' = $MBX.ProhibitSendQuota;
+        'ProhibitR' = $MBX.ProhibitSendReceiveQuota;
+        'ServerNam' = $MBX.ServerName;
+        'DatabaseX' = $MBX.Database;
+        'OWAEnable' = $CBX.OWAEnabled
+        'PopEnable' = $CBX.PopEnabled;
+        'ImpEnable' = $CBX.IMAPEnabled;
+        'ActEnable' = $CBX.ActiveSyncEnabled;
         })
     $CustomList += $CustomObject
 }
-$CustomList | Export-Csv -Path $path -NoTypeInformation
+$CustomList | Select-Object -Pr * | Export-Csv -Path $Path -NoTypeInformation -NoClobber -Force
+
+    #Set the User's Mailbox to Zero
+    #Set-Mailbox -Identity $SamName -IssueWarningQuota 0 -ProhibitSendQuota 0 -ProhibitSendReceiveQuota 0
+
+    #Disconnect User's Mailbox
+    #Disable-Mailbox -Identity $SamName
+
+# Set Proxy to stop all Internet Usage, but leave networking functional.
+#reg delete\\$WSName\HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ProxyEnable
+#reg delete\\$WSName\HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ProxyOverride
+#reg delete\\$WSName\HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ProxyServer
+
+}
+
+$TestList = $CustomList | Select -First 1
+
+Foreach ($Obj in $TestList){
+
+    Set-Mailbox -Identity $Obj.UsersName UseDatabaseQuotaDefaults
+    Set-Mailbox -Identity $Obj.UsersName -IssueWarningQuota 0 -ProhibitSendQuota 0
+    Get-MailboxStatistics -Server $Obj.ServerNam | where { $_.DisconnectDate -ne $null } | select DisplayName,DisconnectDate
+    Connect-Mailbox -database $Obj.DatabaseX -Identity $Obj.UsersName
+    Set-Mailbox -Identity $Obj.UsersName -UseDatabaseQuotaDefaults $false
+    
+    }
