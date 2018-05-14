@@ -4,8 +4,8 @@
 Set-Location C:\tmp
 
 # Import the two lists to $vars
+$long  = Import-CSV -Path longlist.csv
 $short = Import-CSV -Path shortlist.csv
-$long = Import-CSV -Path longlist.csv
 
 # Compare and output
 $list = $long | Where-Object {$short.STIG_ID -contains $_.STIG_ID}
