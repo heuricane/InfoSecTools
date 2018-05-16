@@ -1,9 +1,8 @@
-﻿# Sourced from msmithworkaccount's AutoFill
- 
- $user = "Jay Berkovitz WSMIS ISSO"
+
+$user = "ISSO"
 $initpath = "c:\dwn\"
 
-# This function creates the dialog box to choose the checklist file
+# -- This function creates the dialog box to choose the checklist file -- #
 
 Function Get-FileName($initialDirectory)
 {   
@@ -16,14 +15,14 @@ Function Get-FileName($initialDirectory)
     $OpenFileDialog.filename
 } #end function Get-FileName
 
-#Sets the $path variable to the file you chose in the dialog box
+# -- Sets the $path variable to the file you chose in the dialog box -- #
 $path = Get-FileName -initialDirectory $initpath
 
-#Loads the contents as XML
+# -- Loads the contents as XML -- #
 $xml = [xml](Get-Content $path)
 
 
-#sets the $date variable to the current date and formats it as dd/mm/YYYY and formats the savedate to ISO yyyyMMdd
+# -- Formats date as dd/mm/YYYY and the savedate to ISO yyyyMMdd -- #
 $date = Get-Date -format d
 $savedate = (Get-Date).tostring("yyyyMMdd")
 
@@ -38,7 +37,7 @@ ForEach ($Attr in $xml.CHECKLIST.STIGS.iSTIG.VULN) {
     }
 }
 
-#Save the now modified xml back to the file you initially loaded.
+# -- Save the now modified xml back to the file you initially loaded -- #
 $destination = Split-Path -Path $path -Parent
 $filename = [io.path]::GetFileNameWithoutExtension("$path")
 $xml.Save($destination + "\" + $filename + "_$savedate.ckl")
