@@ -3,16 +3,16 @@
   Searches Doc for words in (Parentheses)
   
 .DESCRIPTION
-    Opens the file
+    Opens the file, searches for words, filters, outputs
   
 .NOTES
-  File Name: Parse-STIGData.ps1
+  File Name: Find-InDocx.ps1
   Author: Jay Berkovitz
-  Link: github.com/heuricane/InfoSecTools/blob/master/Parse-STIGData.ps1
+  Link: github.com/heuricane/InfoSecTools/blob/master/Find-InDocx.ps1
   
 .REQUIREMENTS
   PS Version 5
-  Input STIG XML file
+  Input Word Doc
 #>
 
 $list = @()
