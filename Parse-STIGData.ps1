@@ -1,14 +1,26 @@
 <#
 .SYNOPSIS
+  Inputs XML > Outputs Spreadsheet
+  
+.DESCRIPTION
   Opens STIG XML data (or a checklist)
   Searches for Elements that match criteria
   Cleans/Exports data to a CSV file
+  
+.NOTES
+  File Name: Parse-STIGData.ps1
+  Author: Jay Berkovitz
+  Link: github.com/heuricane/InfoSecTools/blob/master/Parse-STIGData.ps1
+  
+.REQUIREMENTS
+  PS Version 5
+  Input STIG XML file
 #>
 
 # Preset Variables
-$path = "C:\a\Checklist.xml"
+$path = "C:\Checklist.xml"
 $savedate = (Get-Date).tostring("yyyyMMdd")
-$Output = "C:\a\"  +$savedate + "_Custom.csv"
+$Output = "C:\"  +$savedate + "_Custom.csv"
 $search = "Status"
 $find = "Open"
 
@@ -23,7 +35,7 @@ $count = 0
 # Loop Through Findings
 Do{
 
-# Truncate Comments that Exceed the Max Character Length
+# Truncate Comments that Exceed the CSV Max Character Length
 $Comment = $list[$count].COMMENTS.Trim()
 If($Comment.Length -gt 32767){$Comment = $Comment.Substring(0,32756)}
 
@@ -39,4 +51,4 @@ If($Comment.Length -gt 32767){$Comment = $Comment.Substring(0,32756)}
 }While ($count -le $max)
 
 # Export
-$CustList | Export-CSV -NoClobber -NoTypeInfo -Path $Output
+$CustList | Export-CSV -Path $Output -NoTypeInformation
