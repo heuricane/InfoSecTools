@@ -1,8 +1,28 @@
-# Target the file
+<#
+.SYNOPSIS
+  Searches Doc for words in (Parentheses)
+  
+.DESCRIPTION
+    Opens the file
+  
+.NOTES
+  File Name: Parse-STIGData.ps1
+  Author: Jay Berkovitz
+  Link: github.com/heuricane/InfoSecTools/blob/master/Parse-STIGData.ps1
+  
+.REQUIREMENTS
+  PS Version 5
+  Input STIG XML file
+#>
+
+$list = @()
+$output = @()
+
+# -- Target the file -- #
 $filePath = "C:\tmp\file.docx"
 $doc = Get-ChildItem -path $filePath
 
-# Open the File
+# -- Open the File -- #
 $application = New-Object -comobject word.application 
 $document = $application.documents.open("$doc", $false, $true)
 $application.visible = $False
@@ -17,31 +37,25 @@ $range = $document.content
 $null = $range.movestart()
 $string = $document.Content.Text
 
-# Word Count
-
-# Search for all words for words in Parenthesis
-$list = @()
+# -- Search for all words for words in Parentheses -- #
 $count = ($string | measure-object -word).Words
-
 1..$count | Foreach {
     '(' + $String.Split('()')[$_] + ')'
     $list += $String.Split('()')[$_]
 }
 
-# Remove blank entries and sentences in Parenthesis
-$output = @()
+# -- Remove blank entries and sentences in Parenthesis -- #
 Foreach ($line in $list){
     If ($line -ne ""){
-        If($line.length -lt 20){
+        If($line.length -lt 16){
             $output += $line
         }
     }
-
 }
- # Saves the Output
+# -- Saves the Output -- #
 $save = (Get-Date).tostring("yyyyMMddhhmmss")
 $outputPath = "C:\tmp\list-" +$save+ ".csv"
 $output | Sort -Unique > $outputPath
 
-#$document.close()
-#$application.quit()
+$document.close()
+$application.quit()
