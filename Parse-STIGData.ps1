@@ -17,38 +17,34 @@
   Input STIG XML file
 #>
 
-# -- Preset Variables -- #
-$path = "C:\Checklist.xml"
-$savedate = (Get-Date).tostring("yyyyMMdd")
-$Output = "C:\"  +$savedate + "_Custom.csv"
+# -- Preset the Variables -- #
+$path = "C:\a\Checklist.xml"
 $search = "Status"
 $find = "Open"
+$custList=@()
 
 # -- Loads the contents as XML and searches -- #
 $xml = [xml](Get-Content $path)
-$Vulns = $xml.CHECKLIST.STIGS.iSTIG.VULN
-$list = $vulns | where $search -eq $find
-$max = $list.count - 1
-$CustList = @()
-$count = 0
+$list = $xml.CHECKLIST.STIGS.iSTIG.VULN | Where $search -eq $find
 
 # -- Loop Through Findings -- #
-Do{
+0..($list.Count-1) | Foreach {
 
 # -- Truncate Comments that Exceed the CSV Max Character Length -- #
-$Comment = $list[$count].COMMENTS.Trim()
-If($Comment.Length -gt 32767){$Comment = $Comment.Substring(0,32756)}
+    $comment = $list[$_].COMMENTS.Trim()
+    If($comment.Length -gt 32767){$comment = $comment.Substring(0,32756)}
 
 # -- Apply settings to object for Export -- #
-    $CustomObject = New-Object -TypeName PSObject -Property (@{
-        'VULN_IDs' = $list[$count].STIG_DATA.ATTRIBUTE_DATA[0].Trim();
-        'Statuses' = $list[$count].STATUS.Trim();
-        'Detailed' = $list[$count].FINDING_DETAILS.Trim();
-        'Comments' = $Comment
+    $customObject = New-Object -TypeName PSObject -Property (@{
+        'VULN_IDs' = $list[$_].STIG_DATA.ATTRIBUTE_DATA[0].Trim();
+        'Statuses' = $list[$_].STATUS.Trim();
+        'Detailed' = $list[$_].FINDING_DETAILS.Trim();
+        'Comments' = $comment
         })
-    $CustList += $CustomObject
-    $count++
-}While ($count -le $max)
-
+    $custList += $customObject
+}
 # -- Export -- #
-$CustList | Export-CSV -Path $Output -NoTypeInformation
+$saveDate = (Get-Date).tostring("yyyyMMdd")
+$output = "C:\a\"  +$saveDate + "_Custom.csv"
+$custList | Select VULN_IDs,Statuses,Detailed,Comments | 
+    Export-CSV -Path $output -NoTypeInformation
