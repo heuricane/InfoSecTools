@@ -19,7 +19,7 @@ $list = @()
 $output = @()
 
 # -- Target the file -- #
-$filePath = "C:\tmp\file.docx"
+$filePath = "C:\tmp\WSMIS_SAM_V6 0 5.4 SSP_V5_RMF_05172018_RWR.DOCX"
 $doc = Get-ChildItem -path $filePath
 
 # -- Open the File -- #
@@ -38,7 +38,7 @@ $null = $range.movestart()
 $string = $document.Content.Text
 
 # -- Search for all words for words in Parentheses -- #
-$count = ($string | measure-object -word).Words
+$count = ($string | Measure-Object -word).Words
 1..$count | Foreach {
     '(' + $String.Split('()')[$_] + ')'
     $list += $String.Split('()')[$_]
