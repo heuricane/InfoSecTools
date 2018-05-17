@@ -88,7 +88,6 @@ function Import-Xls
     [gc]::Collect();} 
 } 
 
-
 # -- Import Spreadsheet with Function and chop off the header -- #
 $sheets = ".\spreadsheet.xlsx" | Import-Xls -Worksheet 1
 $header = ($sheets | Get-Member | Where Membertype -eq NoteProperty).Name
@@ -130,5 +129,12 @@ $SaveDate = [string](Get-Date -Format yyyyMMdd_HHmm)
 $output = "c:\a\"+$Savedate+".csv"
 $paragraphs | export-csv -NoTypeInformation $output
 
-# -- Displays data in original format
+# -- Displays data in original format -- #
 $hashtable.Keys.ForEach({"`n"+$_+"`n"+$hashtable.$_})
+
+# -- Display All data in key/value pairs -- #
+$hashtable | Format-List Key,Value
+$hashtable.GetEnumerator() | Select Key,Value #| Export-Csv 1.csv -NoTypeInformation
+
+# -- And Back to a Custom Object for some reason -- #
+$customTable = [PSCustomObject]$hashtable
