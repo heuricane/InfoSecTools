@@ -4,21 +4,22 @@
   
 .DESCRIPTION
   Opens Excel spreadsheet
-  Copies data to table
+  Copies data to custom object array
+  Copies array to hashtable
   
 .NOTES
-  File Name: Read-Spreadsheet.ps1
+  File Name: Read-Spreadsheet
   Author: Jay Berkovitz
 
 .REQUIREMENTS
   PS Version 5
-  Input STIG XML file
+  Import XLSx file
 #>
 
+# -- This Function converts xlsx to csv for import -- #
 function Import-Xls 
 { 
     [CmdletBinding(SupportsShouldProcess=$true)] 
-     
     Param( 
         [parameter( 
             mandatory=$true,  
@@ -27,10 +28,8 @@ function Import-Xls
             ValueFromPipelineByPropertyName=$true)] 
         [String[]] 
         $Path, 
-     
         [parameter(mandatory=$false)] 
         $Worksheet = 1, 
-         
         [parameter(mandatory=$false)] 
         [switch] 
         $Force 
@@ -51,25 +50,10 @@ function Import-Xls
             return $temp; 
         } 
         $xlFileFormats = @{ 
-            # single worksheet formats 
             '.csv'  = 6;        # 6, 22, 23, 24 
-            '.dbf'  = 11;       # 7, 8, 11 
-            '.dif'  = 9;        #  
-            '.prn'  = 36;       #  
-            '.slk'  = 2;        # 2, 10 
-            '.wk1'  = 31;       # 5, 30, 31 
-            '.wk3'  = 32;       # 15, 32 
-            '.wk4'  = 38;       #  
-            '.wks'  = 4;        #  
-            '.xlw'  = 35;       #  
-             
-            # multiple worksheet formats 
             '.xls'  = -4143;    # -4143, 1, 16, 18, 29, 33, 39, 43 
-            '.xlsb' = 50;       # 
-            '.xlsm' = 52;       # 
             '.xlsx' = 51;       # 
             '.xml'  = 46;       # 
-            '.ods'  = 60;       # 
         } 
         $xl = New-Object -ComObject Excel.Application; 
         $xl.DisplayAlerts = $false; 
@@ -96,31 +80,29 @@ function Import-Xls
                         Import-Csv $csvTemp; 
                         Remove-Item $csvTemp -Confirm:$false -Verbose:$VerbosePreference; 
                     } 
-                } 
-            } 
-        } 
-    } 
+            }} 
+    }} 
     End 
-    { 
-        $xl.Quit(); 
-        Remove-Variable -name xl -Confirm:$false; 
-        [gc]::Collect(); 
-    } 
+    {$xl.Quit(); 
+    Remove-Variable -name xl -Confirm:$false; 
+    [gc]::Collect();} 
 } 
 
+
+# -- Import Spreadsheet with Function and chop off the header -- #
 $sheets = ".\spreadsheet.xlsx" | Import-Xls -Worksheet 1
 $header = ($sheets | Get-Member | Where Membertype -eq NoteProperty).Name
 $string = $sheets.$header
-$hashtable = @{}
-$paragraphs = @()
 $keys = @()
-$count = 0
 
+# -- Draws out a list of the keys we'll need -- #
 0..$string.count | Foreach{If (!$string[$_]){$keys += $string[$_+1]}}
 
+# -- Groups the settings together in PSobjects with thier key as "paragraphs" -- #
 $count = 0
 $paragraphs = @()
-1..$string.count | Foreach{$currObj = $string[$_]
+1..$string.count | Foreach{
+    $currObj = $string[$_]
     If ($currObj -and $keys -notcontains $currObj){
         $paragraph = New-Object -TypeName PSObject -Property (@{
             'key' = $keys[$count]
@@ -131,4 +113,22 @@ $paragraphs = @()
     If (!$currObj){$count++}
 }
 
-$paragraphs | export-csv -NoTypeInformation c:\a\_test.csv
+# -- Generates a hashtable from $paragraphs, making keys unique -- #
+$keys = @()
+$hashtable = @{}
+$paragraphs | Foreach {
+    $key = $_.key
+    $val = "$_.val"
+    If ($keys -notcontains $key){
+          $hashtable.Add($key,$_.val)
+    }Else{$hashtable.$key += "`n"+$_.val}
+    $keys += $key
+}
+
+# -- Outputs the $paragraphs to a CSV file -- #
+$SaveDate = [string](Get-Date -Format yyyyMMdd_HHmm)
+$output = "c:\a\"+$Savedate+".csv"
+$paragraphs | export-csv -NoTypeInformation $output
+
+# -- Displays data in original format
+$hashtable.Keys.ForEach({"`n"+$_+"`n"+$hashtable.$_})
