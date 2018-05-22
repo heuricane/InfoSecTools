@@ -1,4 +1,8 @@
+<####################################################################
+.SYNOPSIS
+    Seeks STIG data, filters out the trash and exports the find
 
+#>
 $user = "ISSO"
 $initpath = "c:\dwn\"
 
