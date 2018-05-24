@@ -19,7 +19,7 @@ Function helpmenu {
     *MS Exchange Checks*
     Function is simple enough:
     Sends 'Get-Queue' to EH11 and EH12 for message count and status
-    then a 'Get-StorageGroupCopyStatus' to UMEBAEM12 
+    then a 'Get-StorageGroupCopyStatus' to EM12 
     an 'if' statement with a 'send-message' tests the BB server
     Then there are arrays for server types that roll through a 
     'get-service' command to call for displayname and status
@@ -27,7 +27,7 @@ Function helpmenu {
     *Defragment and Analyzer*
     First, it asks for a site or machine name and you choose
     on a side note, the single target machine option doesn't work yet
-    so you chose jeb, isa, or nsa and it sends that array onward
+    so you chose site1, site2, or site3 and it sends that array onward
     'C:\'.DefragAnalysis().DefragRecommended offers a suggestion 
     for each server in the selected site (be it true or false)
     the user can choose to defrag all, none, or only recommended
@@ -35,7 +35,7 @@ Function helpmenu {
     
     *Pre-Reboot Cleanup*
     You choose a site or machine name (but single target option works here)
-    The server arrays are the same as before, isa / jeb / nsa 
+    The server arrays are the same as before, site1, site2, or site3 
     it lists the targets in array and asks for confirmation
     Then it clears all unlocked items from \Windows\temp and all Hotfix logs
     Then appears to hang when scanning/deleting profiles over 180 days old
@@ -61,7 +61,7 @@ Function helpmenu {
     Not really a function, just opens a VMwareCLI window with advice
     
     *Commvault Storage Utilization Report*
-    Imports most recent LibraryandDriveReport from UMEBABU11, copies it to D:
+    Imports most recent LibraryandDriveReport from BU11, copies it to D:
     Displays partial data, then asks if you want to email to ISWO watch.
     
 "@
