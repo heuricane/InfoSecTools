@@ -2,7 +2,7 @@ $currentversion = "Version 2.0"
 #
 #  WATCH SCRIPT 1.96
 #  2013 AUG 11
-#  JAY C BERKOVITZ
+#  JAY C BERKO
 #     
 #  To alter servers in sites, scroll down below the README section to the Environmentals for variables
 #
@@ -109,8 +109,8 @@ $runonreplay="n"
 #  Method to derive email address from admin account name
 #
   $whoami = "$env:username"
-  If ($whoami -like '*y.berkov*'){$thisguy = "jay.berkovitz.ctr"}
-  If ($whoami -like 'Jay.berko*'){$thisguy = "jay.berkovitz.ctr"}
+  If ($whoami -like '*y.berkov*'){$thisguy = "jay.berko.ctr"}
+  If ($whoami -like 'Jay.berko*'){$thisguy = "jay.berko.ctr"}
   $thisguy = $thisguy + "@myaddress.com"
 #
 #  Technet function to get Share access stats
@@ -259,7 +259,7 @@ Function CommVaultReport{
 	$Subject = "Daily Utilization Report $date"
 	$email = @{
 				From = $thisguy
-				To = "JayBerkovitz@myaddress.com"
+				To = "JayBerko@myaddress.com"
 				Subject = $Subject
 				SMTPServer = $mx
 				Body = $body
@@ -420,9 +420,9 @@ Function start-monitor {
     # specify the maximum hosts that can be down before the script is aborted 
     $MaxOutageCount = 10, 
     # specify who gets notified 
-    $notificationto = "JayBerkovitz@myaddress.com", 
+    $notificationto = "JayBerko@myaddress.com", 
     # specify where the notifications come from 
-    $notificationfrom = "JayBerkovitz@myaddress.com" 
+    $notificationfrom = "JayBerko@myaddress.com" 
     )#End Param 
 echo @"
     |
