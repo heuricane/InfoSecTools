@@ -1,4 +1,4 @@
-$currentversion = "Version 1.96"
+$currentversion = "Version 2.0"
 #
 #  WATCH SCRIPT 1.96
 #  2013 AUG 11
@@ -71,20 +71,20 @@ Function helpmenu {
 #    Set Environmentals
 #
 $mx = "smtp-int.me.navy.mil"
-$site3 = @(
-'Server21'
-'Server22'
-'Server23')
-$site2 = @(
-'Server11'
-'Server12'
-'Server13')
 $site1 = @(
 'Server11'
 'Server12'
 'Server13')
+$site2 = @(
+'Server21'
+'Server22'
+'Server23')
+$site3 = @(
+'Server31'
+'Server32'
+'Server33')
 $site4 = @(
-'Server31')
+'Server41')
 $MEMailBoxServers = @(
 'JAYSERVEREM11'
 'JAYSERVEREM12')
@@ -120,12 +120,12 @@ $runonreplay="n"
 
 
 
-function Set-Color{
+Function Set-Color{
 param([String] $Color = $(throw "Please specify a color."))
 # Trap the error and exit the script if the user
 # specified an invalid parameter.
 trap [System.Management.Automation.RuntimeException] {
-  write-error -errorrecord $ERROR[0]
+  Write-Error -ErrorRecord $ERROR[0]
   exit
 }
 # Assume -color specifies a hex value and it cast to a [Byte].
@@ -139,7 +139,7 @@ $fg = $newcolor -band 0xF
 # If the background and foreground match, throw an error;
 # otherwise, set the colors.
 if ($bg -eq $fg) {
-  write-error "The background and foreground colors must not match."
+  Write-Error "The background and foreground colors must not match."
 } else {
   $HOST.UI.RawUI.BackgroundColor = $bg
   $HOST.UI.RawUI.ForegroundColor = $fg
@@ -148,7 +148,7 @@ if ($bg -eq $fg) {
 #
 #    Share Connection
 # 
-function Get-ShareConnection{ 
+Function Get-ShareConnection{ 
   Param 
   ( 
       # param1 help description 
@@ -168,7 +168,7 @@ function Get-ShareConnection{
     $ComputerName | ForEach-Object { 
     $Computer = $_ 
     try { 
-      Get-WmiObject -class Win32_ConnectionShare  -namespace root\cimv2 -comp $Computer -EA Stop |  
+      Get-WmiObject -Class Win32_ConnectionShare -Namespace root\cimv2 -Computer $Computer -EA Stop |  
       Group-Object Antecedent | 
       Select-Object @{Name="ComputerName";Expression={$Computer}}, 
                     @{Name="Share"       ;Expression={(($_.Name -split "=") |  
@@ -186,7 +186,7 @@ function Get-ShareConnection{
   } 
 }
 
-function exitscript {
+Function exitscript {
    Set-Color 0F
    Clear-Host
    exit
@@ -194,41 +194,41 @@ function exitscript {
 #
 #    Wait Job
 #
-function WaitJob($job){
+Function WaitJob($job){
 	#$saveY = [console]::CursorTop
 	#$saveX = [console]::CursorLeft   
 	$str = ' '
-	$date = ( get-date -format "dddd, MMMM dd, yyyy HH:MM:ss").ToCharArray()
+	$date = (Get-Date -format "dddd, MMMM dd, yyyy HH:MM:ss").ToCharArray()
 	$saveYinit = [console]::CursorTop
 	$saveXinit = [console]::CursorLeft      
-	$Start = (get-date).AddHours(2)
+	$Start = (Get-Date).AddHours(2)
 	do {
 		$saveX = $saveXinit
 		$saveY = $saveYinit
 		[console]::setcursorposition($saveX,$saveY)
-		$date = get-date
+		$date = Get-Date
 		$output = "Next run: $Start  Time Now: $date"
         $secRemaining = ($start - $date).TotalSeconds
-		Write-Progress -Activity "Waiting for next checks" -SecondsRemaining $secRemaining -status $output 
-		$State = (Get-Job -Name $job).state -eq 'Running'
+		Write-Progress -Activity "Waiting for next checks" -SecondsRemain $secRemaining -Status $output 
+		$State = (Get-Job -Name $job).State -eq 'Running'
 		if ($state) {$running = $true}
 		else {$running = $false}
 	} while ($running)
 	Remove-Job $job
-    Write-Progress -Activity "Waiting for next checks" -SecondsRemaining $secRemaining -status $output -Completed 
+    Write-Progress -Activity "Waiting for next checks" -SecondsRemain $secRemaining -Status $output -Completed 
 } # end function
 
 #
 #    Comm Vault Report
 #
-function CommVaultReport{
+Function CommVaultReport{
 
 	$mx = "smtp-int.myaddress.com"
 	$Server = "MyBackupServer"
 	$Path = "\\$server\C`$\Reports"
 	$ReportName = "GalaxyReport_libraryandDriveReport*.csv"
-	$ReportFile = get-childitem $Path -Filter $ReportName | Where-Object {($_.CreationTime).date -eq (get-date).date}
-	$Report = Get-content $ReportFile.FullName
+	$ReportFile = Get-ChildItem $Path -Filter $ReportName | Where-Object {($_.CreationTime).date -eq (Get-Date).Date}
+	$Report = Get-Content $ReportFile.FullName
 	$md11Info = $Report | Where-Object {$_ -match "MY_Dell_MD_Server11"} 
 	$md11Info = $md11Info[0].split(',')
 	$md11Capacity = $md11Info[1]
@@ -238,7 +238,7 @@ function CommVaultReport{
 	$md11UsedPerc = "{0:P2}" -f ($md11UsedSpace / $md11Capacity)
 
 	$md12Info = $Report | Where-Object {$_ -match "MY_Dell_MD_Server12"} 
-	$md12Info = $md12Info[0].split(',')
+	$md12Info = $md12Info[0].Split(',')
 	$md12Capacity = $md12Info[1]
 	$md12SpaceLeft = $md12Info[2]
 	$md12UsedSpace = $md12Info[3]
@@ -257,7 +257,7 @@ function CommVaultReport{
 	MD12`t$md12Capacity`t$md12SpaceLeft`t$md12RemainingPerc`t`t$md12UsedPerc
 "@
 
-	$date = get-date -format "dd MMM yyyy"
+	$date = Get-Date -Format "dd MMM yyyy"
 	$Subject = "Daily Utilization Report $date"
 	$email = @{
 				From = $thisguy
@@ -271,14 +271,14 @@ function CommVaultReport{
 #
 #    Analyze/Defrag Function
 #
-function defragglerock {
+Function defragglerock {
    echo @"
     |
     |
     |    Analyze/Defragment Function
 "@
    $sitechoice
-   $defragwho = read-host "    |   Enter name of site or server"
+   $defragwho = Read-Host "    |   Enter name of site or server"
    If ($defragwho -eq "4"){$fragged = $siteavu}
     elseIf ($defragwho -eq "3"){$fragged = $sitejeb}
      elseIf ($defragwho -eq "2"){$fragged = $siteisa} 
@@ -290,24 +290,24 @@ function defragglerock {
     |   List of Servers in array:
     |
 "@
-   $fragged | foreach {
+   $fragged | Foreach {
       echo  "    |    - $_ "
       }
    echo "    |"
-   $confirmanal = read-host "    |   Continue with analysis? [y/n]"
+   $confirmanal = Read-Host "    |   Continue with analysis? [y/n]"
    echo "    |"   
       If ($confirmanal -eq "y")
       {   
-          $fragged | foreach {
-              $Drives = Get-WMIObject Win32_Volume –filter "DriveLetter='C:'" –computer $_
+          $fragged | Foreach {
+              $Drives = Get-WMIObject Win32_Volume -Filter "DriveLetter='C:'" -ComputerName $_
               foreach($drive in $drives)
               {
                   $ShouldDefrag = $Drive.DefragAnalysis().DefragRecommended
-                  write-Host -fore yellow "    |  $_ Defragmentation Recommended?: $ShouldDefrag"
+                  Write-Host -Foreground Yellow "    |  $_ Defragmentation Recommended?: $ShouldDefrag"
               }
           }
       echo "    |"
-      $choosewho = read-host "    |  Do you want to defrag recommended [y/n]"
+      $choosewho = Read-Host "    |  Do you want to defrag recommended [y/n]"
             if ($choosewho -eq "y")
             {
                if($ShouldDefrag)
@@ -315,7 +315,7 @@ function defragglerock {
                   echo "    |"
                   echo "    |  ...Defragmentation in progress..."
                   $DefragResult = $drive.Defrag($true)
-                  if($DefragResult -eq "") {$Drive.ChkDsk($false,$true,$true,$false,$false,$false)}
+                  if($DefragResult -eq ""){$Drive.ChkDsk($false,$true,$true,$false,$false,$false)}
                   echo "    |"
                   echo "    |  Defragementation of C: on $servers complete"
                }
@@ -326,14 +326,14 @@ function defragglerock {
 #
 #    PreReboot Cleanup Function
 #
-function callthecleaner {
+Function callthecleaner {
     echo @"
     |
     |
     |    Pre-Reboot Cleanup Function
 "@
     $sitechoice
-    $dirty = read-host "    |   Enter name of site or server"
+    $dirty = Read-Host "    |   Enter name of site or server"
     If ($dirty -eq "4"){$cleanlist = $siteavu}
         elseIf ($dirty -eq "3"){$cleanlist = $sitejeb}
             elseIf ($dirty -eq "2"){$cleanlist = $siteisa} 
@@ -345,7 +345,7 @@ function callthecleaner {
     |   List of Servers in array:
     |
 "@
-    $cleanlist | foreach {echo "    |    - $_ "}
+    $cleanlist | Foreach {echo "    |    - $_ "}
     echo @"
     |
     |  This script will delete the following:
@@ -357,17 +357,17 @@ function callthecleaner {
     |
     |
 "@
-    $confirmclean = read-host "    |  Continue with cleanup? [y/n]"
+    $confirmclean = Read-Host "    |  Continue with cleanup? [y/n]"
     echo "    |"   
     if ($confirmclean -eq "y")
     {
-        $cleanlist | foreach {
-            $thisos = Get-WmiObject -Class Win32_OperatingSystem -Namespace root/cimv2 -ComputerName $_ | select-object Name
+        $cleanlist | Foreach {
+            $thisos = Get-WmiObject -Class Win32_OperatingSystem -Names root/cimv2 -Computer $_ | Select Name
             echo "Operating System: $thisos"
             echo "    |"
-            remove-item \\$_\c$\windows\temp\* -Recurse -ErrorAction SilentlyContinue
-            remove-item \\$_\c$\windows\KB* -ErrorAction SilentlyContinue
-            remove-item \\$_\c$\windows\$* -Recurse -ErrorAction SilentlyContinue
+            Remove-Item \\$_\c$\windows\temp\* -Recurse -ErrorAction SilentlyContinue
+            Remove-Item \\$_\c$\windows\KB* -ErrorAction SilentlyContinue
+            Remove-Item \\$_\c$\windows\$* -Recurse -ErrorAction SilentlyContinue
             echo "    |    $_ Has been Cleaned"
             echo "    |"
         }
@@ -375,7 +375,7 @@ function callthecleaner {
         {
             echo "    |   ...Scanning/Deleting profiles over 180 days stale... "
             echo "    |"
-            foreach ($dirtyserver in $cleanlist) {\\MyTerminlaServer\C$\AdminScripts\Tools\DelProf2.exe /q /c:$dirtyserver /d:180}
+            foreach ($dirtyserver in $cleanlist) {\\MyTerminalServer\C$\AdminScripts\Tools\DelProf2.exe /q /c:$dirtyserver /d:180}
         }
 #  
 #  This part is Kayode's, but only in part, 
@@ -385,15 +385,16 @@ function callthecleaner {
         {
             foreach ($dirtyprofiles in $cleanlist) 
             {
-            $UserList = gwmi -class Win32_UserProfile -comp $dirtyprofiles | 
-            where-object {$_.ConvertToDateTime($_.lastusetime) -lt (get-date).addDays(-"365") -and $_.Special -eq $False}
-            $Output = $UserList | select @{label="last used";EXPRESSION={$_.ConvertToDateTime($_.lastusetime)}},LocalPath, SID | ft -a
+            $UserList = Get-WmiObject -Class Win32_UserProfile -ComputerName $dirtyprofiles | 
+            Where-Object {$_.ConvertToDateTime($_.lastusetime) -lt (Get-Date).addDays(-"365") -and $_.Special -eq $False}
+            $Output=$UserList|Select @{label="last used";EXPRESSION={$_.ConvertToDateTime($_.lastusetime)}},LocalPath,SID|
+                 Format-Table -AutoSize
             if ($UserList -eq $Null)
                {echo "    |   No profiles found!"y
         	    return}
             else {$Output}
             $in = Read-Host "    |   Are you sure you want to delete these profiles? (Yes/No)"
-            if ($in -eq "Yes") {$UserList | foreach-object {$_.delete()}}
+            if ($in -eq "Yes") {$UserList | ForEach-Object {$_.delete()}}
             else {echo "    |   No Profiles deleted."}
             }
         }
@@ -403,7 +404,7 @@ function callthecleaner {
 #
 #     Reboot Monitorer, stolen off Microsofts technet
 #
-function start-monitor {      
+Function start-monitor {      
 [CmdletBinding()]
  Param              
     (                        
@@ -431,7 +432,7 @@ echo @"
     |      Connectivity Monitor
 "@
 $sitechoice
-$monitorwho = read-host "    |   Enter name of site or server"
+$monitorwho = Read-Host "    |   Enter name of site or server"
    If ($monitorwho -eq "4"){$ComputerName = $site4}
     elseIf ($monitorwho -eq "3"){$ComputerName = $site3}
      elseIf ($monitorwho -eq "2"){$ComputerName = $site2} 
@@ -450,10 +451,10 @@ do
    $ComputerName | Where-Object {!($_ -match "#")} |  
    #"test1","test2" | Where-Object {!($_ -match "#")} | 
    ForEach-Object { 
-      if(Test-Connection -comp $_ -Count 1 -ea silentlycontinue) 
+      if(Test-Connection -ComputerName $_ -Count 1 -ErrorAction silentlycontinue) 
       {
          # if the Host is available then write it to the screen 
-         write-host "    |    Available host ---> "$_ -BackgroundColor Green -fore black 
+         Write-Host "    |    Available host ---> "$_ -Background Green -Foreground black 
          [Array]$available += $_ 
          # if the Host was out and is now backonline, remove it from the OutageHosts list 
          if ($OutageHosts -ne $Null) 
@@ -467,11 +468,11 @@ do
       else
       {
          # If the host is unavailable, give a warning to screen 
-         write-host "    |   Unavailable host ------------> "$_ -BackgroundColor Magenta -ForegroundColor White 
-         if(!(Test-Connection -comp $_ -Count 2 -ea silentlycontinue)) 
+         Write-Host "    |   Unavailable host ------------> "$_ -Background Magenta -Foreground White 
+         if(!(Test-Connection -ComputerName $_ -Count 2 -ErrorAction SilentlyContinue)) 
          { 
             # If the host is still unavailable for 4 full pings, write error and send email 
-            write-host "        |   Unavailable host ------------> "$_ -BackgroundColor Magenta -ForegroundColor White 
+            Write-Host "        |   Unavailable host ------------> "$_ -Background Magenta -Foreground White 
             [Array]$notavailable += $_ 
             if ($OutageHosts -ne $Null) 
             { 
@@ -479,7 +480,7 @@ do
                 { 
                    # First time down add to the list and send email 
                    Write-Host "$_ Is not in the OutageHosts list, first time down" 
-                   $OutageHosts.Add($_,(get-date)) 
+                   $OutageHosts.Add($_,(Get-Date)) 
                    $Now = Get-date 
                    #$Body = "$_ has not responded for 5 pings at $Now" 
                    #Send-MailMessage -Body "$body" -to $notificationto -from $notificationfrom ` 
@@ -497,7 +498,7 @@ do
             { 
                # First time down create the list and send email 
                Write-Host "Adding $_ to OutageHosts." 
-               $OutageHosts = @{$_=(get-date)} 
+               $OutageHosts = @{$_=(Get-Date)} 
                #$Body = "$_ has not responded for 5 pings at $Now"  
                #Send-MailMessage -Body "$body" -to $notificationto -from $notificationfrom ` 
                # -Subject "Host $_ is down" -SmtpServer $smtpserver 
@@ -506,19 +507,24 @@ do
       } 
    } 
    # Report to screen the details 
-   write-host "Available count:"$available.count 
-   write-host "Not available count:"$notavailable.count 
-   write-host "Not available hosts:" 
+   Write-Host "Available count:"$available.count 
+   Write-Host "Not available count:"$notavailable.count 
+   Write-Host "Not available hosts:" 
    $OutageHosts 
-   write-host "" 
-   write-host "Sleeping $SleepTimeOut seconds" 
-   sleep $SleepTimeOut 
+   Write-Host "" 
+   Write-Host "Sleeping $SleepTimeOut seconds" 
+   Start-Sleep $SleepTimeOut 
    if ($OutageHosts.Count -gt $MaxOutageCount) 
    { 
       # If there are more than a certain number of host down in an hour abort the script. 
       $Exit = $True 
-      $body = $OutageHosts | Out-String 
-      Send-MailMessage -Body "$body" -to $notificationto -from $notificationfrom -Subject "More than $MaxOutageCount Hosts down, monitoring aborted" -SmtpServer $mx 
+      $body = $OutageHosts | Out-String
+      $params = @{'Body' = $body;
+                  'SmtpServer' = $mx;
+                  'To' = $notificationto;
+                  'From' = $notificationfrom;
+                  'Subject'="More than $MaxOutageCount Hosts down, monitoring aborted"}
+      Send-MailMessage @params
    } 
 } 
 while ($Exit -ne $True) 
@@ -526,7 +532,7 @@ while ($Exit -ne $True)
 #
 #     Reboot Servers Function
 #
-function rebootserver {
+Function rebootserver {
     $zombiecount=0
     $zomebiekill=0
     $theundead=@()
@@ -537,7 +543,7 @@ function rebootserver {
 
 "@
     $sitechoice
-    $zombielist = read-host "    |   Enter name of site or server"
+    $zombielist = Read-Host "    |   Enter name of site or server"
     If ($zombielist -eq "4"){$rebootwho = $site4}
         elseif ($zombielist -eq "3"){$rebootwho = $site3}
             elseIf ($zombielist -eq "2"){$rebootwho = $site2} 
@@ -549,23 +555,23 @@ function rebootserver {
     |   List of Servers in array:
     |
 "@
-    $rebootwho | foreach {echo "    |    - $_ "}
+    $rebootwho | Foreach {echo "    |    - $_ "}
     foreach ($zombie in $rebootwho){$zombiecount++}
     echo " "
-    $necromancy = read-host "    |  Are you certain? [y/n]"
+    $necromancy = Read-Host "    |  Are you certain? [y/n]"
     if ($necromancy = "y")
     {
-        $rebootwho | foreach {
-            if (test-connection $_ -count 1 -ea silentlycontinue)
+        $rebootwho | Foreach {
+            if (Test-Connection $_ -Count 1 -ErrorAction SilentlyContinue)
             {
-                write-host -fore green " - Send reboot to $_"
+                Write-Host -ForegroundColor Green " - Send reboot to $_"
                 echo " "
-                Restart-computer -comp $_ -throttlelimit -1
+                Restart-computer -ComputerName $_ -ThrottleLimit -1
                 $theundead += $_
                 $risen=0
             }
             do {
-                if (test-connection $_ -count 1 -ea silentlycontinue)
+                if (Test-Connection $_ -Count 1 -ErrorAction SilentlyContinue)
                 {
                     echo "    Waiting for $_ to die..."
                     $rising=1
@@ -573,59 +579,59 @@ function rebootserver {
                 else 
                 {
                     do {
-                        if (test-connection $_ -count 1 -ea silentlycontinue)
+                        if (Test-Connection $_ -Count 1 -ErrorAction SilentlyContinue)
                         {
                             $rising=0
                             $risen=1
                             $zombiekill ++
                             echo " "
-                            write-host -fore yellow "    Happy Easter"                                 
+                            Write-Host -ForegroundColor Yellow "    Happy Easter"                                 
                             echo " "
                         }
                         else 
                         {
                             $rising=1
                             echo "    $_ died, awaiting the resurrection..."
-                            sleep 5
+                            Start-Sleep 5
                         }
                     }
                     while ($rising -eq 1)
                 }
-                sleep 5
+                Start-Sleep 5
             } 
             while ($risen -eq 0)
         }
         echo " "
         echo "Reboots sent to $theundead"
         echo " "
-        write-host -fore yellow "    $zombiekill zombies resurrected"
+        Write-Host -ForegroundColor Yellow "    $zombiekill zombies resurrected"
         echo " "
     }    
 }
 #
 #    Check for Stopped Services Function
 #
-function autostopped {
+Function autostopped {
     echo @"
     |
     |
     |     Post Reboot Service Check
 "@
     $sitechoice
-    write-host -fore yellow "    |   - Only displays failed services -"
+    Write-Host -ForegroundColor Yellow "    |   - Only displays failed services -"
     echo "    |"
     echo "    |"
-    $siteservices = read-host "    |   Enter name of site"
+    $siteservices = Read-Host "    |   Enter name of site"
     echo " "
     If ($siteservices -eq "4"){$targetsvcs = $site4}
         elseIf($siteservices -eq "3"){$targetsvcs = $site3}
             elseIf ($siteservices -eq "2"){$targetsvcs = $site2} 
                 elseIf ($siteservices -eq "1"){$targetsvcs = $site1}
                     elseIf ($siteservices -eq "a"){$targetsvcs = $allsite}
-    $targetsvcs | foreach {
+    $targetsvcs | Foreach {
         echo "    |   $_ "
-        Get-WmiObject -Class Win32_Service -Comp $_ -Filter $svcfilter |
-        select displayname,state,startmode | Out-String
+        Get-WmiObject -Class Win32_Service -ComputerName $_ -Filter $svcfilter |
+        Select displayname,state,startmode | Out-String
     }
     echo "    |"
 }
@@ -634,8 +640,13 @@ function autostopped {
 # 
 Function BlackberryCheck{
 
-Send-MailMessage -to "Admin1@myaddress.com" -from 'Admin2@MyAddress.com' -subject '<$Confirm>' -smtpserver "smtp-int.MyAddress.com"
-"Blackberry email confirmation message sent`n" 
+$params = @{'Subject' = "<$Confirm>";
+            'To' = "Admin1@myaddress.com";
+            'From' = "Admin2@MyAddress.com'";
+            'SmtpServer' = "smtp-int.MyAddress.com";
+            'Body' = "Blackberry email confirmation message sent`n"}
+Send-MailMessage @params
+ 
 }
 
 #
@@ -646,9 +657,9 @@ function ExchangeCheck {
     # Microsoft Exchange Management Powershell Snapin
     #
     $s = "Microsoft.Exchange.Management.PowerShell.Admin"
-    if (get-pssnapin $s -ea "silentlycontinue") {
+    if (Get-PSSnapin $s -ErrorAction "SilentlyContinue") {
     }
-    elseif (get-pssnapin $s -registered -ea "silentlycontinue") {
+    elseif (Get-PSSnapin $s -Registered -ErrorAction "SilentlyContinue") {
         #"PSsnapin $s is registered but not loaded"
         Add-PSSnapin $s
     }
@@ -659,17 +670,19 @@ function ExchangeCheck {
 	"****EH 11 & EH 12 Queues****" 
 	Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize  | Out-String
 	Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize | Out-String
-    Get-Queue -Serve  Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize  | Out-String
+    Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize  | Out-String
 	Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize | Out-String
 	
-	foreach($MailboxServer in $MEMailBoxServers){
+	Foreach($MailboxServer in $MEMailBoxServers){
 	
         "****Storage Group Status****" 
-	    Get-StorageGroupCopyStatus -Server $MailboxServer | Sort StorageGroupName | Select StorageGroupName,SummaryCopyStatus,CCRTargetNode,CopyQueueLength | Format-Table -AutoSize | Out-String
+	    Get-StorageGroupCopyStatus -Server $MailboxServer | Sort StorageGroupName | 
+            Select StorageGroupName,SummaryCopyStatus,CCRTargetNode,CopyQueueLength | 
+            Format-Table -AutoSize | Out-String
         Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running $MailboxServer Storage Group Status Check"
 	    "*****Mailbox Database Status****" 
         Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running $Mailboxserver Mailbox Database Status Check"
-        $o = Get-ClusteredMailboxServerStatus -Identity MyMailBoxServer | select operationalmachines
+        $o = Get-ClusteredMailboxServerStatus -Identity MyMailBoxServer | Select operationalmachines
 		$o = $o.operationalmachines | Where-Object {$_ -like "*active*"} 
 		$o = $O -split " " 
 
@@ -690,20 +703,14 @@ Value = $machineName "
 Offline Addressbook Generation is running on the active Node $MachineName. 
 No Action required." 
 }
-
    
         # Get the mailbox databases from the server
-
-        $mbdatabases = Get-MailboxDatabase -Server $MailboxServer -status | Sort-Object -Property Name 
+        $mbdatabases = Get-MailboxDatabase -Server $MailboxServer -Status | Sort-Object -Property Name 
  
-
         # Get the public folder databases from the server
-
-        $pfdatabases = Get-PublicFolderDatabase -Server $MailboxServer -status | Sort-Object -Property Name
-
+        $pfdatabases = Get-PublicFolderDatabase -Server $MailboxServer -Status | Sort-Object -Property Name
 
         # Create an array for the databases
-
         $databases = @()
         $TotalDBSize = 0 
  
@@ -717,141 +724,86 @@ No Action required."
           ForEach ($mdb in $mbdatabases) {
 
                 # Create an object to store information about the database
-
                 $db = "" | Select-Object Name,Mounted,LastFullBackup,LastIncrementalBackup,EdbFilePath,DefragStart,DefragEnd,DefragDuration,DefragInvocations,DefragDays,Size,WhiteSpace,VolumeSize,Healthy
 
-            
-
                 # Populate the object
-
                 $db.Name = $mdb.Name.ToString()
-            
                 $db.Mounted =[string] $mdb.Mounted
-
-                $db.LastFullBackup =[string] (get-date([string]$mdb.LastFullBackup) -Format "yyyyMMdd")
-
+                $db.LastFullBackup =[string] (Get-Date([string]$mdb.LastFullBackup) -Format "yyyyMMdd")
             
-                $db.LastIncrementalBackup = [string] (get-date([string]$mdb.LastIncrementalBackup) -Format "yyyyMMdd")
-
+                $db.LastIncrementalBackup = [string] (Get-Date([string]$mdb.LastIncrementalBackup) -Format "yyyyMMdd")
                 $db.EdbFilePath = $mdb.EdbFilePath.ToString()
-                        
                 $path = ([string]$mdb.EdbFilePath.PathName) -replace "E:\\", "\\$MachineName\E$\"
-            
                 $dbsize = (Get-ChildItem $path).Length
-	        
                 $TotalDBSize += $dbsize
-
                 $db.Size = $dbsize
-            
                             
                 # Add this database to the array
-
                 $databases = $databases + $db
-
           } 
-
         }
-
- 
-
         # Check if public folder databases were found on the server
 
         If ($pfdatabases) {
-
             # Loop through the databases
-
             ForEach ($pfdb in $pfdatabases) {
-
                 # Create an object to store information about the database
-
                 $db = "" | Select-Object Name,Mounted,LastFullBackup,LastIncrementalBackup,EdbFilePath,DefragStart,DefragEnd,DefragDuration,DefragInvocations,DefragDays,Size,WhiteSpace,VolumeSize,Healthy
-
-            
-
+       
                 # Populate the object
-
                 $db.Name = $pfdb.Name.ToString()
-
                 $db.Mounted = $pfdb.Mounted
-
-                $db.LastFullBackup = [string](get-date([string]$pfdb.LastFullBackup) -Format "yyyyMMdd")
-                        
-                $db.LastIncrementalBackup = [string](get-date([string]$pfdb.LastIncrementalBackup) -Format "yyyyMMdd")
-            
+                $db.LastFullBackup = [string](Get-Date([string]$pfdb.LastFullBackup) -Format "yyyyMMdd")
+                $db.LastIncrementalBackup = [string](Get-Date([string]$pfdb.LastIncrementalBackup) -Format "yyyyMMdd")
                 $db.EdbFilePath = $pfdb.EdbFilePath.ToString()
-                        
                 $path = ([string]$pfdb.EdbFilePath.PathName) -replace "E:\\", "\\$MachineName\E$\"
                 $dbsize = (Get-ChildItem $path).Length
-	        
                 $TotalDBSize += $dbsize
-
                 $db.Size = $dbsize
             
                 # Add this database to the array
-
                 $databases = $databases + $db
             } 
-
         }
-
- 
-
         # Retrieve the events from the local Application log, filter them for ESE messages
-
-    
-
         # Create an array for the output
 
         $out = @()
-    
- 
 
         # Loop through each of the databases and search the event logs for relevant messages
             
-            $700Logs = $machines | foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=700;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $701Logs = $machines | foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=701;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $703Logs = $machines | foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=703;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $1221Logs = $machines | foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=1221;logname='application';providername = 'MSExchangeIS Mailbox Store'} -MaxEvents 200 -ErrorAction SilentlyContinue}
+            $700Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=700;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
+            $701Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=701;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
+            $703Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=703;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
+            $1221Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=1221;logname='application';providername = 'MSExchangeIS Mailbox Store'} -MaxEvents 200 -ErrorAction SilentlyContinue}
             $logs += $700Logs + $701Logs + $703Logs + $1221Logs
 
         ForEach ($db in $databases) {
-            
             $dbName = $db.name
             Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running $dbName Status Check"
 
             # Create the search string to look for in the Message property of each log entry
-
             $s = "*" + $dbName + "*"
-
-           
 
             # Search for an event 701 or 703, meaning that online defragmentation finished
 
-            $end = $logs | where { $_.Message -like "$s" -and ($_.Id -eq 701 -or $_.Id -eq 703)} | select-object -First 1
+            $end = $logs | Where { $_.Message -like "$s" -and ($_.Id -eq 701 -or $_.Id -eq 703)} | Select-Object -First 1
             $endTime =[datetime] $end.TimeCreated
        
             # Search for the first event 700 which preceeds the finished event
-
-            $start = $logs | where {$_.Message -like "$s" -and $_.Id -eq 700 -and ([datetime]$_.TimeCreated) -le $endTime} | select-object -First 1
+            $start = $logs | Where {$_.Message -like "$s" -and $_.Id -eq 700 -and ([datetime]$_.TimeCreated) -le $endTime} | select-object -First 1
 
             # Make sure we found both a start and an end message
-
-            $WhiteSpace = $logs | where {$_.Message -like "$s" -and $_.Id -eq 1221 } | select-object -First 1
-
-      
+            $WhiteSpace = $logs | Where {$_.Message -like "$s" -and $_.Id -eq 1221 } | Select-Object -First 1
 
             # Get the start and end times
 
             $db.DefragStart =[string] (Get-Date($start.TimeCreated) -Format "yyyyMMdd")
-
             $db.DefragEnd =[string] (Get-Date($end.TimeCreated) -Format "yyyyMMdd")
-
- 
 
             # Parse the end event message for the number of seconds defragmentation ran for
 
             $WhiteSpace.Message -match "has .* megabytes" >$null
-
             $numWhiteSpace = [float]($Matches[0].Split(" ")[1]) * 1MB
             if($numWhiteSpace -ge (100 * 1MB)){
                 $db.WhiteSpace= ([math]::Round(($numWhiteSpace / 1gb),2)).Tostring() + " GB"
@@ -862,40 +814,33 @@ No Action required."
             $NumSize = [float]$db.Size  
 
             $db.Size = ([math]::Round( ($db.size / 1GB),2)).ToString() + " GB" 
-                
             $db.DefragDuration = [string] (([math]::round(([float]([timespan]($end.TimeCreated - $start.TimeCreated)).totalhours), 2)).ToString() + " Hrs")
         
             # Parse the end event message for the number of invocations and days
 
             $end.Message -match "requiring .* invocations over .* days" >$null
-
             $db.DefragInvocations =[string] ($Matches[0].Split(" ")[1])
-
             $db.DefragDays =[string] ($Matches[0].Split(" ")[4])
-        
             $db.VolumeSize = 300 * 1GB
-
-
             $perFree = ($numWhiteSpace / $numSize) * 100
-       
 
             if( $perFree -le 20 -and $db.DefragInvocations  -and $numSize -le ($db.volumeSize * .8)) {$db.healthy  = $true}
             else{$db.healthy = $false}
 
-      
-      
-
           # Add the data for this database to the output
 
           $out = $out + $db
-
         }
 
  
 
     # Print the output
-    Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Completed $Mailboxserver Mailbox Database Status Check"
-    $out |select Name,Mounted,LastFullBackup,LastIncrementalBackup,DefragStart,DefragEnd,DefragDuration,Size,WhiteSpace,Healthy| Format-Table -Property * -autosize | Out-String -Width 4096
+    $params = @{'Activity' = "System Checks";
+                'CurrentOperation' = "Exchange Check";
+                'Status' = "Completed $Mailboxserver Mailbox Database Status Check"}
+    Write-Progress @params
+    $out |Select Name,Mounted,LastFullBackup,LastIncrementalBackup,DefragStart,DefragEnd,DefragDuration,Size,WhiteSpace,Healthy | 
+        Format-Table -Property * -autosize | Out-String -Width 4096
     $TotalDBSize = [math]::Round(($TotalDBSize/ 1GB),2)
     "Total Database size = $TotalDBSize GB
     `n`n"
@@ -915,7 +860,7 @@ Function FileandPrintCheck{
 	$PFShare = @("PrintServer01","PrintServer02","PrintServer03","FileServer01","FileServer02") | ForEach-Object { 
     $Computer = $_ 
     try { 
-       Get-WmiObject -class Win32_ConnectionShare  -namespace root\cimv2 -comp $Computer -EA Stop |  
+       Get-WmiObject -Class Win32_ConnectionShare -Namespace root\cimv2 -ComputerName $Computer -EA Stop |  
       Group-Object Antecedent | 
       Select-Object @{Name="ComputerName";Expression={$Computer}}, 
                     @{Name="Share"       ;Expression={(($_.Name -split "=") |  
@@ -939,11 +884,11 @@ Function FileandPrintCheck{
 #
 #    Web Checks
 # 
-function Webcheck{
+Function Webcheck{
     #
     #    Test Port
     # 
-    function testport{
+    Function testport{
       Param([string]$srv,$port=443,$timeout=3000,[switch]$verbose)
  
       # Test-Port.ps1
@@ -972,7 +917,7 @@ function Webcheck{
       {
         # Close the connection and report the error if there is one
         $error.Clear()
-        $tcpclient.EndConnect($iar) | out-Null
+        $tcpclient.EndConnect($iar) | Out-Null
         if(!$?){if($verbose){$error[0]};$failed = $true}
         $tcpclient.Close()
       }
@@ -987,7 +932,7 @@ function Webcheck{
     'CiscoWorksServer'
     'ServiceDeskURL'
     'OWA')
-	foreach ($https in $httpsarray){
+	Foreach ($https in $httpsarray){
 		if (testport $https){"  Port 443 open to $https" }
 		else {"  Error connecting to $https on port 443" }
 	}
@@ -997,8 +942,8 @@ function Webcheck{
 #
 #    Run Check Jobs
 # 	
-function RunRegularWatchChecks{
-	cls
+Function RunRegularWatchChecks{
+	Clear-Host
     $output = @()
     $Date = [string](get-date)
 	
@@ -1009,16 +954,15 @@ function RunRegularWatchChecks{
     #Blackberry Check
     $Output += BlackberryCheck
     Write-Progress -Activity "System Checks" -CurrentOperation "Blackberry Check" -Status "Running"
-    sleep -Seconds 3
+    Start-Sleep -Seconds 3
     Write-Progress -Activity "System Checks" -CurrentOperation "Blackberry Check" -Status "Completed"
-    
-    cls
+    Clear-Host
     
 
     #Exchange Check
     Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Starting"
     Start-Sleep 3 
-    cls 
+    Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running"
     $Output +=ExchangeCheck
     Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Completed"
@@ -1026,7 +970,7 @@ function RunRegularWatchChecks{
     #File and Print Check
     Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Starting"
     Start-Sleep 3 
-    cls 
+    Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Running"
     $Output +=FileandPrintCheck
     Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Completed"
@@ -1034,7 +978,7 @@ function RunRegularWatchChecks{
     #Web Check
     Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Starting"
     Start-Sleep 3 
-    cls 
+    Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Running"
     $Output +=Webcheck
     Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Completed"
@@ -1044,7 +988,7 @@ function RunRegularWatchChecks{
     Set-Content -Path 'UpdateToChecks.txt' -Value $output 
     Write-Progress -Activity "System Checks" -CurrentOperation "Creating Check Log" -Status "Complete"
     Start-Sleep -Seconds 5
-	cls
+	Clear-Host
     Write-Progress -Activity "System Checks" -CurrentOperation "Alert" -Status "Check your email for BlackBerry confirmation receipt."
 	Sleep 5
     Write-Progress -Activity "System Checks" -Status "Complete" -Completed
@@ -1069,13 +1013,13 @@ function RunRegularWatchChecks{
 		$objNotifyIcon.ShowBalloonTip(10000)
         
         $StartTime = [datetime]::Now.AddHours(2) 
-		Start-Job -ScriptBlock {Start-Sleep -Seconds 7200} -Name 'replay' | out-null
+		Start-Job -ScriptBlock {Start-Sleep -Seconds 7200} -Name 'replay' | Out-Null
         
         $ck = Get-Job -Name "replay"
-        cls 
+        Clear-Host 
         $jobState = $ck.State.ToString()
         while($jobState -ne "Completed"){
-            $timeNow = get-date
+            $timeNow = Get-Date
             $timeRemaining = ($startTime - $timeNow).totalSeconds
             Write-Progress -Activity "System Checks" -CurrentOperation "Run next check" -Status "Waiting" -SecondsRemaining $timeRemaining 
         }       
@@ -1089,9 +1033,9 @@ function RunRegularWatchChecks{
 #
 #    Exchange Checks Query
 #
-function RegularWatchChecksQuery{
+Function RegularWatchChecksQuery{
     if ($runonreplay -ne "y"){
-        cls
+        Clear-Host
         Write-Host @"
 Regular Watch Checks     
 --------------------------------------------------------
@@ -1099,7 +1043,7 @@ If you choose to repeat, it will run,
 wait 2 hours, and run again, until the end of time    
 --------------------------------------------------------
 "@
-    $runonreplay = read-host "Repeat on a 2 hour cycle? [y/n]"
+    $runonreplay = Read-Host "Repeat on a 2 hour cycle? [y/n]"
     
     }
     
@@ -1158,8 +1102,8 @@ do{
     |  [10] Exit
     |
 "@
-    $poison = read-host "    |   Make your choice [0-10]"
-    write-host "    |"
+    $poison = Read-Host "    |   Make your choice [0-10]"
+    Write-Host "    |"
     Set-Color 2F
     If ($poison -eq 0){helpmenu}
       elseIf ($poison -eq 1){RegularWatchChecksquery}
@@ -1173,7 +1117,7 @@ do{
                       elseIf ($poison -eq 9){CommVaultReport}
                         elseIf ($poison -eq 10){exitscript}
     Write-Host "`n"
-    $round = read-host "`tBack to main menu? [y/n]"
+    $round = Read-Host "`tBack to main menu? [y/n]"
     if ($round -ne 'y') {exitscript}
     
 }while ($round -eq "y")
