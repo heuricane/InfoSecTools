@@ -15,7 +15,6 @@ Function helpmenu {
     and after each one an option to return to main menu
     Don't worry, this script is harmless and there's always a way out.
     by typing 'no' or the infamous control+C, or closing the window
-
     *MS Exchange Checks*
     Function is simple enough:
     Sends 'Get-Queue' to EH11 and EH12 for message count and status
@@ -23,7 +22,6 @@ Function helpmenu {
     an 'if' statement with a 'send-message' tests the BB server
     Then there are arrays for server types that roll through a 
     'get-service' command to call for displayname and status
-
     *Defragment and Analyzer*
     First, it asks for a site or machine name and you choose
     on a side note, the single target machine option doesn't work yet
@@ -362,7 +360,7 @@ Function callthecleaner {
     if ($confirmclean -eq "y")
     {
         $cleanlist | Foreach {
-            $thisos = Get-WmiObject -Class Win32_OperatingSystem -Names root/cimv2 -Computer $_ | Select Name
+            $thisos = Get-WmiObject -Class Win32_OperatingSystem -Names root/cimv2 -Comp $_ | Select Name
             echo "Operating System: $thisos"
             echo "    |"
             Remove-Item \\$_\c$\windows\temp\* -Recurse -ErrorAction SilentlyContinue
@@ -513,7 +511,7 @@ do
    $OutageHosts 
    Write-Host "" 
    Write-Host "Sleeping $SleepTimeOut seconds" 
-   Start-Sleep $SleepTimeOut 
+   Start-Sleep -Seconds $SleepTimeOut 
    if ($OutageHosts.Count -gt $MaxOutageCount) 
    { 
       # If there are more than a certain number of host down in an hour abort the script. 
@@ -540,7 +538,6 @@ Function rebootserver {
     |
     |
     |    Initiate Reboot Function
-
 "@
     $sitechoice
     $zombielist = Read-Host "    |   Enter name of site or server"
@@ -566,7 +563,7 @@ Function rebootserver {
             {
                 Write-Host -ForegroundColor Green " - Send reboot to $_"
                 echo " "
-                Restart-computer -ComputerName $_ -ThrottleLimit -1
+                Restart-Computer -ComputerName $_ -ThrottleLimit -1
                 $theundead += $_
                 $risen=0
             }
@@ -575,8 +572,7 @@ Function rebootserver {
                 {
                     echo "    Waiting for $_ to die..."
                     $rising=1
-                }
-                else 
+                }else 
                 {
                     do {
                         if (Test-Connection $_ -Count 1 -ErrorAction SilentlyContinue)
@@ -587,19 +583,16 @@ Function rebootserver {
                             echo " "
                             Write-Host -ForegroundColor Yellow "    Happy Easter"                                 
                             echo " "
-                        }
-                        else 
+                        }else 
                         {
                             $rising=1
                             echo "    $_ died, awaiting the resurrection..."
-                            Start-Sleep 5
+                            Start-Sleep -Seconds 5
                         }
-                    }
-                    while ($rising -eq 1)
+                    }while ($rising -eq 1)
                 }
-                Start-Sleep 5
-            } 
-            while ($risen -eq 0)
+                Start-Sleep -Seconds 5
+            }while ($risen -eq 0)
         }
         echo " "
         echo "Reboots sent to $theundead"
@@ -673,19 +666,18 @@ function ExchangeCheck {
     Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize  | Out-String
 	Get-Queue -Server Exchange_HUB_Server | select DeliveryType,Status,MessageCount,NextHopDomain | Format-Table -AutoSize | Out-String
 	
-	Foreach($MailboxServer in $MEMailBoxServers){
+	Foreach($MBS in $MEMailBoxServers){
 	
         "****Storage Group Status****" 
-	    Get-StorageGroupCopyStatus -Server $MailboxServer | Sort StorageGroupName | 
+	    Get-StorageGroupCopyStatus -Server $MBS | Sort StorageGroupName | 
             Select StorageGroupName,SummaryCopyStatus,CCRTargetNode,CopyQueueLength | 
             Format-Table -AutoSize | Out-String
-        Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running $MailboxServer Storage Group Status Check"
+        Write-Progress -Activity "System Checks" -Current "Exchange Check" -Status "Running $MBS Storage Group Status Check"
 	    "*****Mailbox Database Status****" 
-        Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running $Mailboxserver Mailbox Database Status Check"
+        Write-Progress -Activity "System Checks" -Current "Exchange Check" -Status "Running $MBS Mailbox Database Status Check"
         $o = Get-ClusteredMailboxServerStatus -Identity MyMailBoxServer | Select operationalmachines
 		$o = $o.operationalmachines | Where-Object {$_ -like "*active*"} 
 		$o = $O -split " " 
-
 		$MachineName = [string]$o[0]
 		$reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $MachineName)
 		$regKey= $reg.OpenSubKey("System\\CurrentControlSet\\Services\MSExchangeSA\\Parameters\\MyMailboxServerName")
@@ -705,10 +697,10 @@ No Action required."
 }
    
         # Get the mailbox databases from the server
-        $mbdatabases = Get-MailboxDatabase -Server $MailboxServer -Status | Sort-Object -Property Name 
+        $mbdatabases = Get-MailboxDatabase -Server $MBS -Status | Sort-Object -Property Name 
  
         # Get the public folder databases from the server
-        $pfdatabases = Get-PublicFolderDatabase -Server $MailboxServer -Status | Sort-Object -Property Name
+        $pfdatabases = Get-PublicFolderDatabase -Server $MBS -Status | Sort-Object -Property Name
 
         # Create an array for the databases
         $databases = @()
@@ -716,11 +708,9 @@ No Action required."
  
 
         # Check if mailbox databases were found on the server
-
         If ($mbdatabases) {
 
           # Loop through the databases
-
           ForEach ($mdb in $mbdatabases) {
 
                 # Create an object to store information about the database
@@ -730,7 +720,6 @@ No Action required."
                 $db.Name = $mdb.Name.ToString()
                 $db.Mounted =[string] $mdb.Mounted
                 $db.LastFullBackup =[string] (Get-Date([string]$mdb.LastFullBackup) -Format "yyyyMMdd")
-            
                 $db.LastIncrementalBackup = [string] (Get-Date([string]$mdb.LastIncrementalBackup) -Format "yyyyMMdd")
                 $db.EdbFilePath = $mdb.EdbFilePath.ToString()
                 $path = ([string]$mdb.EdbFilePath.PathName) -replace "E:\\", "\\$MachineName\E$\"
@@ -772,10 +761,10 @@ No Action required."
 
         # Loop through each of the databases and search the event logs for relevant messages
             
-            $700Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=700;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $701Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=701;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $703Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=703;logname='application';providername ='ESE'} -MaxEvents 200 -ErrorAction SilentlyContinue}
-            $1221Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=1221;logname='application';providername = 'MSExchangeIS Mailbox Store'} -MaxEvents 200 -ErrorAction SilentlyContinue}
+            $700Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=700;logname='application';providername ='ESE'} -Max 200 -EA SilentlyContinue}
+            $701Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=701;logname='application';providername ='ESE'} -Max 200 -EA SilentlyContinue}
+            $703Logs = $machines | Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=703;logname='application';providername ='ESE'} -Max 200 -EA SilentlyContinue}
+            $1221Logs = $machines| Foreach {Get-WinEvent -ComputerName $_ -FilterHashtable @{id=1221;logname='application';providername = 'MSExchangeIS Mailbox Store'} -Max 200 -EA SilentlyContinue}
             $logs += $700Logs + $701Logs + $703Logs + $1221Logs
 
         ForEach ($db in $databases) {
@@ -812,7 +801,6 @@ No Action required."
                 $db.WhiteSpace= ([math]::Round(($numWhiteSpace / 1mb),2)).Tostring() + " MB"
             }
             $NumSize = [float]$db.Size  
-
             $db.Size = ([math]::Round( ($db.size / 1GB),2)).ToString() + " GB" 
             $db.DefragDuration = [string] (([math]::round(([float]([timespan]($end.TimeCreated - $start.TimeCreated)).totalhours), 2)).ToString() + " Hrs")
         
@@ -837,10 +825,10 @@ No Action required."
     # Print the output
     $params = @{'Activity' = "System Checks";
                 'CurrentOperation' = "Exchange Check";
-                'Status' = "Completed $Mailboxserver Mailbox Database Status Check"}
+                'Status' = "Completed $MBS Mailbox Database Status Check"}
     Write-Progress @params
     $out |Select Name,Mounted,LastFullBackup,LastIncrementalBackup,DefragStart,DefragEnd,DefragDuration,Size,WhiteSpace,Healthy | 
-        Format-Table -Property * -autosize | Out-String -Width 4096
+        Format-Table -Property * -AutoSize | Out-String -Width 4096
     $TotalDBSize = [math]::Round(($TotalDBSize/ 1GB),2)
     "Total Database size = $TotalDBSize GB
     `n`n"
@@ -857,21 +845,16 @@ Function FileandPrintCheck{
     '\\DFSServer\ShareName03'
 )
 	"****Checking Print/Share server status****" 
-	$PFShare = @("PrintServer01","PrintServer02","PrintServer03","FileServer01","FileServer02") | ForEach-Object { 
-    $Computer = $_ 
+	$PFShare = @("PrintServ01","PrintServ02","PrintServ03","FileServ01","FileServ02") | ForEach-Object { 
     try { 
-       Get-WmiObject -Class Win32_ConnectionShare -Namespace root\cimv2 -ComputerName $Computer -EA Stop |  
+      Get-WmiObject -Class Win32_ConnectionShare -Namespace root\cimv2 -ComputerName $_ -EA Stop |  
       Group-Object Antecedent | 
-      Select-Object @{Name="ComputerName";Expression={$Computer}}, 
+      Select-Object @{Name="ComputerName";Expression={$_}}, 
                     @{Name="Share"       ;Expression={(($_.Name -split "=") |  
                     Select-Object -Index 1).trim('"')}}, 
                     @{Name="Connections" ;Expression={$_.Count}}
-      
-      } 
-      catch  
-        { 
-          return  
-        } 
+      }catch  
+      {return} 
 	}
     $PFShare | Format-Table -Property * -AutoSize | Out-String -Width 4096
 
@@ -897,7 +880,7 @@ Function Webcheck{
       $ErrorActionPreference = "SilentlyContinue"
  
       # Create TCP Client
-      $tcpclient = new-Object system.Net.Sockets.TcpClient 
+      $tcpclient = New-Object system.Net.Sockets.TcpClient 
  
       # Tell TCP Client to connect to machine on Port
       $iar = $tcpclient.BeginConnect($srv,$port,$null,$null)
@@ -961,28 +944,28 @@ Function RunRegularWatchChecks{
 
     #Exchange Check
     Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Starting"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Running"
     $Output +=ExchangeCheck
     Write-Progress -Activity "System Checks" -CurrentOperation "Exchange Check" -Status "Completed"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     #File and Print Check
     Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Starting"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Running"
     $Output +=FileandPrintCheck
     Write-Progress -Activity "System Checks" -CurrentOperation "File and Print Check" -Status "Completed"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     #Web Check
     Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Starting"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     Clear-Host 
 	Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Running"
     $Output +=Webcheck
     Write-Progress -Activity "System Checks" -CurrentOperation "Web Check" -Status "Completed"
-    Start-Sleep 3 
+    Start-Sleep -Seconds 3 
     #Create Check Log
     Write-Progress -Activity "System Checks" -CurrentOperation "Creating Check Log" -Status "Running"
     Set-Content -Path 'UpdateToChecks.txt' -Value $output 
@@ -990,7 +973,7 @@ Function RunRegularWatchChecks{
     Start-Sleep -Seconds 5
 	Clear-Host
     Write-Progress -Activity "System Checks" -CurrentOperation "Alert" -Status "Check your email for BlackBerry confirmation receipt."
-	Sleep 5
+	Start-Sleep -Seconds 5
     Write-Progress -Activity "System Checks" -Status "Complete" -Completed
     
     if ($runonreplay -eq "y"){
